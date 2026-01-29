@@ -1,7 +1,7 @@
 // API Base URL
 // API Base URL
 // Use VITE_API_URL if configured (e.g. for sharing via ngrok), otherwise fallback to localhost
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:5000/api' : '/api');
 
 // Get auth token from localStorage
 const getToken = (): string | null => {
