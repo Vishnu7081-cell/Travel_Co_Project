@@ -1,0 +1,66 @@
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+
+const userSchema = new mongoose.Schema(
+    {
+        email: {
+            type: String,
+            required: [true, 'Please provide an email'],
+            unique: true,
+            lowercase: true,
+            trim: true,
+            match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Invalid email']
+        },
+        password: {
+            type: String,
+            required: [true, 'Please provide a password'],
+            minlength: 6,
+            select: false // Don't return password by default
+        },
+        customerId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Customer',
+            required: true
+        },
+        isActive: {
+            type: Boolean,
+            default: true
+        },
+        lastLogin: {
+            type: Date
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        },
+        updatedAt: {
+            type: Date,
+            default: Date.now
+        }
+    },
+    {
+        timestamps: true
+    }
+);
+
+// Hash password before saving
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) {
+        return next();
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+});
+
+// Method to compare passwords
+userSchema.methods.comparePassword = async function (candidatePassword) {
+    return await bcrypt.compare(candidatePassword, this.password);
+};
+
+// Indexes
+userSchema.index({ email: 1 });
+userSchema.index({ customerId: 1 });
+
+export default mongoose.model('User', userSchema);
